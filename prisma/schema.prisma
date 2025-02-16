@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// model User {
+//   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+//   name       String    @db.VarChar(100)
+//   email      String    @unique @db.VarChar(255)
+//   password   String    @db.VarChar(255)
+//   role       String     
+//   orders     Order[] 
+//   created_at DateTime? @default(now()) @db.Timestamp(6)
+// }
+
+model User {
+  id       String  @id @default(uuid())
+  email    String  @unique
+  password String
+  role     String  // 'admin' or 'user'
+  orders   Order[] // ✅ Backrelation for orders
+}
+
+model GroceryItem {
+  id          String      @id @default(uuid())
+  name        String
+  price       Float
+  quantity    Int
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+}
+
+model OrderItem {
+  id            String      @id @default(uuid())
+  orderId       String
+  order         Order       @relation(fields: [orderId], references: [id])
+  groceryItemId String
+  groceryItem   GroceryItem @relation(fields: [groceryItemId], references: [id])
+  quantity      Int
+}

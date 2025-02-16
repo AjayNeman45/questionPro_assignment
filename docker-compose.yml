@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: my_postgres
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 5s
+      retries: 10
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}  
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  
+      POSTGRES_DB: ${DB_NAME}  
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  nodeapp:
+    build: .
+    container_name: my_node_app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev"]
+
+volumes:
+  pgdata:
